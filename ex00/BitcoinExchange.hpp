@@ -1,12 +1,16 @@
 #include <iostream>
 #include <map>
+#include <sstream>
 class BitcoinExchange{
     private :
         std::map<std::string, float> db;
+        void fill_map(const std::string &db);
+        bool is_valid_float(const std::string &val, float &value);
     public :
         BitcoinExchange();
-        BitcoinExchange(const std::string &file, const std::string &db);
+        BitcoinExchange(const std::string &db);
         ~BitcoinExchange();
         BitcoinExchange(const BitcoinExchange &cp);
         BitcoinExchange &operator=(const BitcoinExchange cp);
+        void print_data(const std::string &file);
 };

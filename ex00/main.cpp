@@ -5,6 +5,7 @@ int main(int argc, char **argv)
     (void)argc;
     (void)argv;
 
-    BitcoinExchange a("Makefile", "data.csv");
+    BitcoinExchange a("data.csv");
+    a.print_data("input.txt");
     return 0;
 }
