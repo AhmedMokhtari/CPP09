@@ -44,6 +44,44 @@ bool BitcoinExchange::is_valid_float(const std::string &val, float &value){
     value = strtof(val.c_str() , &end);
     return *end == 0;
 }
+
+bool BitcoinExchange::isLeap(int year){
+    if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0)
+        return true;
+    return false;
+}
+
+bool BitcoinExchange::is_valid_date(const std::string &val, int &year, int &month, int &day){
+    if (val.size() != 10)
+        return false;
+    if (val[4] != '-' || val[7] != '-')
+        return false;
+    for (int i = 0; i < 10; i++)
+    {
+        if (i == 4 || i == 7)
+            continue;
+        if (!std::isdigit(val[i]))
+            return false;
+    }
+    std::stringstream d(val);
+    char a;
+
+    d >> year;
+    d >> a;
+    d >> month;
+    d >> a;
+    d >> day;
+    int arr[] = {31 , 28 , 31 , 30 , 31 , 30 , 31 , 31, 30 , 31 , 30 , 31};
+    if (day > 31 || month > 12 || day == 0 || month == 0)
+        return false;
+    if (isLeap(year))
+        arr[1] = 29;
+    if (day > arr[month - 1])
+        return false;
+    return true;
+}
+
+
 void BitcoinExchange::print_data(const std::string &file){
     std::fstream f(file.c_str());
     if (!f.is_open())
@@ -62,16 +100,34 @@ void BitcoinExchange::print_data(const std::string &file){
         std::string sep;
         std::string val;
         float value;
+        int year, month, day;
 
         s >> date;
         s >> sep;
         s >> val;
         
-        if (date.empty() || sep.empty() || val.empty())
+
+        if (date.empty())
         {
             std::cerr << "Error :  empty filed \n";
             continue ;
         }
+        if (!is_valid_date(date, year, month, day))
+        {
+            std::cout << "Error : bad input => "<< date <<  "\n";
+            continue;
+        }
+        if (sep.empty() || val.empty())
+        {
+            std::cerr << "Error :  empty filed \n";
+            continue ;
+        }
+        if (!is_valid_float(val, value))
+        {
+            std::cout << "Error : bad input => "<< val <<  "\n";
+            continue;
+        }
+
         if (value > 1000)
         {
             std::cerr << "Error :  Too Large Number \n";
@@ -82,30 +138,21 @@ void BitcoinExchange::print_data(const std::string &file){
             std::cerr << "Error :  not a positive number.\n";
             continue ;
         }
-        if (!is_valid_float(val, value))
+        std::map<std::string, float>::iterator it = db.lower_bound(date);
+        float res;
+        if (it->first == date)
+            res = it->second;
+        else if (it != db.begin())
         {
-            std::cout << "Error : bad input => "<< val <<  "\n";
-            continue;
+            it--;
+            res = it->second;
         }
-        
-        std::stringstream d(date);
-
-
-        int y,m, da;
-        char a;
-
-        d >> y;
-        d >> a;
-        d >> m;
-        d >> a;
-        d >> da;
-        std::cout << "year is " << y << std::endl;
-        std::cout << "char  is " << a << std::endl;
-        std::cout << "month  is " << m << std::endl;
-        std::cout << "day  is " << da << std::endl;
-        std::cout << "date : "  << date << " value : " << value << std::endl;
+        else{
+            std::cout << "Date before First date in data \n";
+            continue ;
+        }
+        std::cout <<  date << " => " << value << " = "  << res * value <<  std::endl;
     }
-
 }
 BitcoinExchange::~BitcoinExchange(){
 
